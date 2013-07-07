@@ -1,9 +1,3 @@
--- Must run the following lines to enable AppleScript to run Preview.app
---
--- sudo defaults write /Applications/Preview.app/Contents/Info NSAppleScriptEnabled -bool true
--- sudo chmod 644 /Applications/Preview.app/Contents/Info.plist
--- sudo codesign -f -s - /Applications/Preview.app
-
 on run arguments
 	-- tell application "Finder" to display dialog "hello"
 	set theDocFilePath to first item of arguments -- the references database .bib file, or empty to create a new one
@@ -37,11 +31,6 @@ on run arguments
 				set cite key to generated cite key as string -- 'as string' is seemingly required under Tiger
 				if doAddbraces then set title to "{" & title & "}"
 
-				-- delete braces in author, journal, and title fields using the UNIX shell command 'tr'
-				set value of field "author" to (do shell script "echo " & (value of field "author") & " | tr -d '{}'")
-				set value of field "journal" to (do shell script "echo " & (value of field "journal") & " | tr -d '{}'")
-				set value of field "title" to (do shell script "echo " & (value of field "title") & " | tr -d '{}'")
-
 				-- delete file and note fields from Zotero and add DOI to linked URLs
 				set value of field "file" to ""
 				set value of field "note" to ""
@@ -62,33 +51,13 @@ on run arguments
 				   set cleanPDF to ""
 				   set delPageOne to ""
 
-				   set optList to {"Autofile", "Autofile and delete first page of PDF", "Autofile, uncompress PDF, and delete first page", "Autofile and uncompress PDF", "Do nothing"}
+				   set optList to {"Autofile", "Do nothing"}
 				   activate
 				   choose from list optList with prompt "Do the following with article PDF" default items {"Autofile"}
 				   if item 1 of result is "Autofile" then
 				      set autofilePDF to true
-				   else if item 1 of result is "Autofile and delete first page of PDF"
-				      set autofilePDF to true
-				      set delPageOne to "2-end"				      
-				   else if item 1 of result is "Autofile and uncompress PDF" then
-				      set autofilePDF to true
-				      set cleanPDF to "uncompress"
-				   else if item 1 of result is "Autofile, uncompress PDF, and delete first page" then
-				      set autofilePDF to true
-				      set cleanPDF to "uncompress"
-				      set delPageOne to "2-end"
 				   end if
 
-				   if (cleanPDF is not equal to "") or (delPageOne is not equal to "") then
-				      set cleanPDFCMD to Â
-				      "export PATH=/usr/local/bin:$PATH;Â
-				      tempfoo=cleanPDFtmpfile;Â
-				      TMPFILE=`mktemp /tmp/${tempfoo}.XXXXXX` || exit 1;Â
-				      pdftk \""& pdfPath &"\" cat " & delPageOne & " output $TMPFILE " & cleanPDF & " 2>&1;Â
-				      cp $TMPFILE \"" & pdfPath & "\";Â
-				      rm $TMPFILE"
-				      do shell script cleanPDFCMD
-				   end if
 				   if autofilePDF then
 				      add (POSIX file pdfPath) to beginning of linked files
 				      auto file

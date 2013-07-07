@@ -14,6 +14,8 @@
       <preference id="z2b-pref-extra-braces" name="extensions.z2b.extrabraces" type="bool"/>
       <preference id="z2b-pref-open-pub" name="extensions.z2b.openpub" type="bool"/>
       <preference id="z2b-pref-bring-to-front" name="extensions.z2b.bringtofront" type="bool"/>
+      <preference id="z2b-pref-pdfdir-useff" name="extensions.z2b.pdfdiruseff" type="bool"/>
+      <preference id="z2b-pref-pdfdir" name="extensions.z2b.pdfdir" type="string"/>
     </preferences>
     <groupbox oncommand="listAction(event);" onselect="listAction(event);">
       <caption label="In the Zot2Bib status bar menu..."/> 
@@ -38,6 +40,26 @@
         <checkbox preference="z2b-pref-extra-braces" label="Add extra braces around its Title field (preserves capitalisation in TeX)"/>
         <checkbox preference="z2b-pref-open-pub" label="Open it for editing in BibDesk"/>
         <checkbox preference="z2b-pref-bring-to-front" label="Bring BibDesk to front"/>
+    </groupbox>
+    <groupbox>
+      <caption label="Directory to save PDFs in before autofiling by BibDesk:" />
+      <radiogroup id="z2b-pdfdir"
+		  preference="z2b-pref-pdfdir-useff"
+		  onsyncfrompreference="Zotero_Preferences.Advanced.onDataDirLoad();"
+		  onsynctopreference="return Zotero_Preferences.Advanced.onDataDirUpdate(event);">
+	<radio id="z2b-pdfdir-useff-true" label="Use Firefox download folder" value="true"/>
+	<hbox>
+	  <radio label="Custom:" value="false"/>
+	  <textbox id="z2b-pdfdirPath" preference="z2b-pref-pdfdir"
+		   onsyncfrompreference="return Zotero_Preferences.Advanced.getDataDirPath();"
+		   readonly="true" flex="1"/>
+	  <button label="Choose..."
+		  oncommand="var file = Zotero.chooseZoteroDirectory(true);
+			     if (!file) {
+			     event.stopPropagation();
+			     }"/>
+	</hbox>
+      </radiogroup>
     </groupbox>
   </prefpane>
 

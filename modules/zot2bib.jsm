@@ -2,8 +2,10 @@ var EXPORTED_SYMBOLS = ['Zot2Bib'];
 
 var Zotero;
 var own_path = Components.classes["@mackerron.com/getExtDir;1"].createInstance().wrappedJSObject.getExtDir();
-var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+var prefs   = Components.classes["@mozilla.org/preferences-service;1"]
     .getService(Components.interfaces.nsIPrefService).getBranch("extensions.z2b.");
+var ffPrefs = Components.classes["@mozilla.org/preferences-service;1"].
+    getService(Components.interfaces.nsIPrefService).getBranch("browser.download.");
 var about_window_ref, prefs_window_ref, help_window_ref;
 
 var deleteQueue = [];
@@ -194,6 +196,25 @@ Zot2Bib = {
         pw.startCloseTimer(time);
 	
     },
+    // getFFDownloadFolder borrowed from ZotFile by Joscha Legewie
+    getFFDownloadFolder: function () {
+        var path="";
+        try {
+            if(ffPrefs.getBoolPref('useDownloadDir')) {
+                var downloadManager = Components.classes["@mozilla.org/download-manager;1"]
+                    .getService(Components.interfaces.nsIDownloadManager);
+                path=downloadManager.userDownloadsDirectory.path;
+            }
+            if(!ffPrefs.getBoolPref('useDownloadDir') 
+	       && ffPrefs.prefHasUserValue('lastDir') ) {
+                path=ffPrefs.getCharPref('lastDir');
+            }
+        }
+        catch (err) {
+            path="";
+        }
+        return(path);
+    },
     saveBibTeX: function(item, pdf) {
 	var file = Components.classes["@mozilla.org/file/directory_service;1"].
 	    getService(Components.interfaces.nsIProperties).get("TmpD", Components.interfaces.nsIFile);
@@ -252,11 +273,6 @@ Zot2Bib = {
 	
 	translator.translate();
 
-	var tmpdir = Components.classes["@mozilla.org/file/local;1"].
-	    createInstance(Components.interfaces.nsILocalFile);
-	tmpdir.initWithPath("/Users/vancleve/temp");
-	// prompts.alert(null, "Zot2Bib test", "dir path: " + dir.path);
-	file.copyTo(tmpdir, "temp.bib");
     }
 }
 
