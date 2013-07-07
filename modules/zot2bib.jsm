@@ -62,7 +62,7 @@ var zoteroCallback = {
 
 var zoteroAttachmentCallback = {
     notify: function(event, type, ids, extraData) {
-	var pdfpath = "/Users/vancleve/Downloads";
+	var pdfpath = Zot2Bib.getPDFDir(true);
 
 	if (event == 'modify') {
 	    var call_items = Zotero.Items.get(ids);
@@ -196,6 +196,18 @@ Zot2Bib = {
         pw.startCloseTimer(time);
 	
     },
+    fileExists: function (path) {
+	var file = Components.classes["@mozilla.org/file/local;1"].
+	    createInstance(Components.interfaces.nsILocalFile);
+	file.initWithPath(path);
+
+	try {
+            return(file.exists());
+        }
+        catch (err) {
+            return(false);
+        }
+    },
     // getFFDownloadFolder borrowed from ZotFile by Joscha Legewie
     getFFDownloadFolder: function () {
         var path="";
@@ -214,6 +226,25 @@ Zot2Bib = {
             path="";
         }
         return(path);
+    },
+    // this function inspired by "getSourceDir" in ZotFile by Joscha Legewie
+    getPDFDir: function(message) {
+        var pdfdir="";
+                        
+        if ( prefs.getBoolPref("pdfdiruseff")) 
+	    pdfdir=Zot2Bib.getFFDownloadFolder();
+        if (!prefs.getBoolPref("pdfdiruseff"))
+	    pdfdir=prefs.getCharPref("pdfdir");
+                                   
+        // test whether valid source dir
+        if (pdfdir!="" && Zot2Bib.fileExists(pdfdir)) {
+            return (pdfdir);
+        } else {
+            if(message)
+		Zot2Bib.infoWindow("Zot2Bib error",
+				   "Invalid PDF download directory",8000);
+            return(-1);
+        }
     },
     saveBibTeX: function(item, pdf) {
 	var file = Components.classes["@mozilla.org/file/directory_service;1"].
