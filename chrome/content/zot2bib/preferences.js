@@ -89,3 +89,40 @@ onload = function() {
 onblur = onunload = function () {
   copyListToPrefs();
 }
+
+function onPDFDirLoad() {
+    var path = document.getElementById('z2b-pdfdirPath');
+    var useFFDir = prefs.getBoolPref('pdfdiruseff');
+    path.setAttribute('disabled', useFFDir);
+}
+
+function onPDFDirUpdate(event) {
+    var radiogroup = document.getElementById('z2b-pdfdir');
+    var path = document.getElementById('z2b-pdfdirPath');
+    var useFFDir = prefs.getBoolPref('pdfdiruseff');
+    
+    // If triggered from the Choose button, don't show the dialog, since
+    // chooseDirectory() (called below due to the radio button
+    // change) shows its own
+    if (event.originalTarget && event.originalTarget.tagName == 'button') {
+	return true;
+    }
+    
+    // If changing from Firefox download directory to custom
+    if (useFFDir) {
+	var dir = Zot2Bib.chooseDirectory(true);
+	radiogroup.selectedIndex = dir ? 1 : 0;
+	return !dir;
+    }
+    
+    // changing from custom to Firefox download directory
+    useFFDir = !radiogroup.selectedIndex;
+    prefs.setBoolPref('pdfdiruseff', useFFDir);
+
+    return useFFDir;
+}
+
+function getPDFDirPath() {
+    var desc = prefs.getCharPref('pdfdir');
+    return desc;
+}

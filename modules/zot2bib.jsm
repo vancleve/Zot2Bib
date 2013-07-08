@@ -196,6 +196,7 @@ Zot2Bib = {
         pw.startCloseTimer(time);
 	
     },
+    // fileExists: test if file exists
     fileExists: function (path) {
 	var file = Components.classes["@mozilla.org/file/local;1"].
 	    createInstance(Components.interfaces.nsILocalFile);
@@ -208,7 +209,8 @@ Zot2Bib = {
             return(false);
         }
     },
-    // getFFDownloadFolder borrowed from ZotFile by Joscha Legewie
+    // getFFDownloadFolder: obtain the download folder from Firefox
+    // -- borrowed from ZotFile by Joscha Legewie
     getFFDownloadFolder: function () {
         var path="";
         try {
@@ -227,7 +229,8 @@ Zot2Bib = {
         }
         return(path);
     },
-    // this function inspired by "getSourceDir" in ZotFile by Joscha Legewie
+    // getPDFDir: get the current direction to save PDFs in before autofiling in BibDesk
+    // -- inspired by "getSourceDir" in ZotFile by Joscha Legewie
     getPDFDir: function(message) {
         var pdfdir="";
                         
@@ -244,6 +247,33 @@ Zot2Bib = {
 		Zot2Bib.infoWindow("Zot2Bib error",
 				   "Invalid PDF download directory",8000);
             return(-1);
+        }
+    },
+    // chooseDirectory: open brower window to choose a directory
+    chooseDirectory: function () {
+        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+            .getService(Components.interfaces.nsIWindowMediator);
+        var win = wm.getMostRecentWindow('navigator:browser');
+	
+        var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+            .getService(Components.interfaces.nsIPromptService);
+	
+        var nsIFilePicker = Components.interfaces.nsIFilePicker;
+        while (true) {
+            var fp = Components.classes["@mozilla.org/filepicker;1"]
+                .createInstance(nsIFilePicker);
+            fp.init(win, Zotero.getString('dataDir.selectDir'), nsIFilePicker.modeGetFolder);
+            fp.appendFilters(nsIFilePicker.filterAll);
+            if (fp.show() == nsIFilePicker.returnOK) {
+                var file = fp.file;
+		
+                // Set preference
+                //Zotero.ZotFile.prefs.setCharPref(pref,file.path);
+                return(file.path);
+            }
+            else {
+                return(false);
+            }
         }
     },
     saveBibTeX: function(item, pdf) {

@@ -45,19 +45,16 @@
       <caption label="Directory to save PDFs in before autofiling by BibDesk:" />
       <radiogroup id="z2b-pdfdir"
 		  preference="z2b-pref-pdfdir-useff"
-		  onsyncfrompreference="Zotero_Preferences.Advanced.onDataDirLoad();"
-		  onsynctopreference="return Zotero_Preferences.Advanced.onDataDirUpdate(event);">
+		  onsyncfrompreference="onPDFDirLoad();"
+		  onsynctopreference="return onPDFDirUpdate(event);">
 	<radio id="z2b-pdfdir-useff-true" label="Use Firefox download folder" value="true"/>
 	<hbox>
 	  <radio label="Custom:" value="false"/>
 	  <textbox id="z2b-pdfdirPath" preference="z2b-pref-pdfdir"
-		   onsyncfrompreference="return Zotero_Preferences.Advanced.getDataDirPath();"
+		   onsyncfrompreference="return getPDFDirPath();"
 		   readonly="true" flex="1"/>
 	  <button label="Choose..."
-		  oncommand="var file = Zotero.chooseZoteroDirectory(true);
-			     if (!file) {
-			     event.stopPropagation();
-			     }"/>
+		  oncommand="Zot2Bib.chooseDirectory(true);"/>
 	</hbox>
       </radiogroup>
     </groupbox>
