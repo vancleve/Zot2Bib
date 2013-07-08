@@ -7,8 +7,6 @@ on run arguments
 	set doAddbraces to (fifth item of arguments is equal to "true")
 	set pdfPath to sixth item of arguments
 	
-	set abbrevCMD to "/Users/vancleve/bin/abbreviateJournalTitles.pl"
-
 	set readFile to open for access POSIX file thePubFilePath
 	set pubData to read readFile as Çclass utf8È
 	close access readFile
@@ -36,13 +34,6 @@ on run arguments
 				set value of field "note" to ""
 				if value of field "doi" is not equal to ""
 				   add "http://dx.doi.org/" & (value of field "doi") to end of linked URLs
-				end if
-
-				-- abbreviate journal name
-				set command to (abbrevCMD & " -m " & "\"" & value of field "journal" as text) & "\""
-				set newJournal to (do shell script command)
-				if newJournal is not equal to "" then
-				   set value of field "journal" to newJournal
 				end if
 
 				-- link PDF

@@ -84,14 +84,16 @@ var zoteroAttachmentCallback = {
 			file.copyTo(dir, file.leafName);
 						
 			// open PDF
-			var opencmd = Components.classes["@mozilla.org/file/local;1"].
-			    createInstance(Components.interfaces.nsILocalFile);
-			opencmd.initWithPath('/usr/bin/open');
-			var openprocess = Components.classes["@mozilla.org/process/util;1"].
-			    createInstance(Components.interfaces.nsIProcess);
-			openprocess.init(opencmd);
-			var args = [dir.path + "/" + file.leafName]
-			openprocess.runw(true, args, args.length)
+			if (prefs.getBoolPref('openpdf')) {
+			    var opencmd = Components.classes["@mozilla.org/file/local;1"].
+				createInstance(Components.interfaces.nsILocalFile);
+			    opencmd.initWithPath('/usr/bin/open');
+			    var openprocess = Components.classes["@mozilla.org/process/util;1"].
+				createInstance(Components.interfaces.nsIProcess);
+			    openprocess.init(opencmd);
+			    var args = [dir.path + "/" + file.leafName]
+			    openprocess.runw(true, args, args.length)
+			}
 
 			// save bibtex item and link PDF
 			var parentItem = Zotero.Items.get(call_item.getSource());
@@ -267,8 +269,10 @@ Zot2Bib = {
             if (fp.show() == nsIFilePicker.returnOK) {
                 var file = fp.file;
 		
-                // Set preference
-                //Zotero.ZotFile.prefs.setCharPref(pref,file.path);
+                // Set preference	
+		prefs.setCharPref('pdfdir', file.persistentDescriptor);
+		prefs.setBoolPref('pdfdiruseff', false);
+
                 return(file.path);
             }
             else {

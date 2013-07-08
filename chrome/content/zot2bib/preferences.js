@@ -1,5 +1,7 @@
 
 Components.utils.import('resource://zot2bib/zot2bib.jsm');
+var prefs   = Components.classes["@mozilla.org/preferences-service;1"]
+    .getService(Components.interfaces.nsIPrefService).getBranch("extensions.z2b.");
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 var listbox, addbtn, removebtn, upbtn, downbtn, manydests;
@@ -110,6 +112,7 @@ function onPDFDirUpdate(event) {
     
     // If changing from Firefox download directory to custom
     if (useFFDir) {
+	event.stopPropagation();
 	var dir = Zot2Bib.chooseDirectory(true);
 	radiogroup.selectedIndex = dir ? 1 : 0;
 	return !dir;
