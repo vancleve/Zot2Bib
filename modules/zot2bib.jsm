@@ -319,7 +319,7 @@ Zot2Bib = {
 		    pdfPath = pdf
 		}
 		var args = [script_path, destfiles[j], file.path, openpub, bringtofront, extrabraces, pdfPath];
-		process.runw(true, args, args.length); 
+		process.runw(false, args, args.length); 
 		// first param true => calling thread will be blocked until called process terminates
 	    }
 	    if (! prefs.getBoolPref('keepinzotero')) {
