@@ -10,7 +10,7 @@ on run arguments
 	set abbrevCMD to "/Users/vancleve/bin/abbreviateJournalTitles.pl"
 	
 	set readFile to open for access POSIX file thePubFilePath
-	set pubData to read readFile as Çclass utf8È
+	set pubData to read readFile as Â«class utf8Â»
 	close access readFile
 	
 	if theDocFilePath is not equal to "" then set theDocFile to POSIX file theDocFilePath
@@ -78,12 +78,12 @@ on run arguments
 					end if
 					
 					if (cleanPDF is not equal to "") or (delPageOne is not equal to "") then
-						set cleanPDFCMD to Â
-							"export PATH=/usr/local/bin:$PATH;Â
-				      tempfoo=cleanPDFtmpfile;Â
-				      TMPFILE=`mktemp /tmp/${tempfoo}.XXXXXX` || exit 1;Â
-				      pdftk \"" & pdfPath & "\" cat " & delPageOne & " output $TMPFILE " & cleanPDF & " 2>&1;Â
-				      cp $TMPFILE \"" & pdfPath & "\";Â
+						set cleanPDFCMD to Â¬
+							"export PATH=/usr/local/bin:$PATH;Â¬
+				      tempfoo=cleanPDFtmpfile;Â¬
+				      TMPFILE=`mktemp /tmp/${tempfoo}.XXXXXX` || exit 1;Â¬
+				      pdftk \"" & pdfPath & "\" cat " & delPageOne & " output $TMPFILE " & cleanPDF & " 2>&1;Â¬
+				      cp $TMPFILE \"" & pdfPath & "\";Â¬
 				      rm $TMPFILE"
 						do shell script cleanPDFCMD
 					end if
