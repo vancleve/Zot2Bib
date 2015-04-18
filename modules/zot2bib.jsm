@@ -19,9 +19,14 @@ var deleteCallback = {
 
 var zoteroCallback = {
     notify: function(event, type, ids, extraData) {
-	if (event == 'add') {
-	    var items = Zotero.Items.get(ids);
-	    
+
+	var items = Zotero.Items.get(ids);
+
+	Zotero.debug('event: ' + event + ', type: ' + type + ', ids: ' + ids + ', items.length: ' + items.length);
+
+	// zotero has added a reference. if it has a PDF attachement, then wait until its done.
+	// otherwise, export to bibtex
+	if (event == 'add') {	    
 	    for (var i = 0; i < items.length; i ++) {
 		var item = items[i];
 		if (! item.isRegularItem() || 
@@ -52,30 +57,25 @@ var zoteroCallback = {
 			    Zot2Bib.saveBibTeX(item);
 			}
 			//prompts.alert(null, "Zot2Bib test", "attachmentmimetype : " + child.attachmentMIMEType);
+			
 		    }
 		}		
 	    }
 	}
-    }
-}
 
-
-var zoteroAttachmentCallback = {
-    notify: function(event, type, ids, extraData) {
-	var pdfpath = Zot2Bib.getPDFDir(true);
-
-	if (event == 'modify') {
-	    var call_items = Zotero.Items.get(ids);
+	// checking on PDF attachements to see if they're done and then exporting.
+	else if (event == 'modify') {
+	    var pdfpath = Zot2Bib.getPDFDir(true);
 	    
-	    for (var i = 0; i < call_items.length; i ++) {
-		var call_item = call_items[i];
+	    for (var i = 0; i < items.length; i ++) {
+		var item = items[i];
 		// var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
 		//     getService(Components.interfaces.nsIPromptService);
 		
-		if (call_item.isAttachment()) {
-		    var file = call_item.getFile();
+		if (item.isAttachment()) {
+		    var file = item.getFile();
 		    // make sure file exists and is PDF
-		    if (file && call_item.attachmentMIMEType == 'application/pdf') { //Zotero.File.getExtension(file) == "pdf") {
+		    if (file && item.attachmentMIMEType == 'application/pdf') { //Zotero.File.getExtension(file) == "pdf") {
 			// if attachment is attached to parent references that was imported
 			var dir = Components.classes["@mozilla.org/file/local;1"].
 			    createInstance(Components.interfaces.nsILocalFile);
@@ -91,15 +91,30 @@ var zoteroAttachmentCallback = {
 			    var openprocess = Components.classes["@mozilla.org/process/util;1"].
 				createInstance(Components.interfaces.nsIProcess);
 			    openprocess.init(opencmd);
-			    var args = [dir.path + "/" + file.leafName]
+			    var args = [dir.path + "/" + file.leafName];
 			    openprocess.runw(true, args, args.length)
 			}
 
 			// save bibtex item and link PDF
-			var parentItem = Zotero.Items.get(call_item.getSource());
+			var parentItem = Zotero.Items.get(item.getSource());
 			Zot2Bib.saveBibTeX(parentItem, dir.path + "/" + file.leafName)
 		    }
 		}
+	    }
+	}
+
+	// if PDF is deleted, recover the parent item ID and import that into bibtex
+	else if (event == 'delete') {
+	    item = extraData[ids[0]];
+	    //Zotero.debug('extraData: ' + extraData[ids[0]].old.sourceItemKey);
+	    
+	    if (item.old.attachment.mimeType == 'application/pdf') {
+		var sql = "SELECT itemID FROM items WHERE key='" + item.old.sourceItemKey +"'";
+		var parent_id = Zotero.DB.valueQuery(sql);
+		Zotero.debug('sql id: ' + parent_id);
+
+	    	var parentItem = Zotero.Items.get(parent_id);
+	    	Zot2Bib.saveBibTeX(parentItem);
 	    }
 	}
     }
@@ -111,7 +126,6 @@ Zot2Bib = {
 	if (! Zotero) {
 	    Zotero = z;
 	    Zotero.Notifier.registerObserver(zoteroCallback, ['item']);
-	    Zotero.Notifier.registerObserver(zoteroAttachmentCallback, ['item']);
 	}
     },
     about: function(w) {
