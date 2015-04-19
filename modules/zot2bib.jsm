@@ -114,7 +114,15 @@ var zoteroCallback = {
 		Zotero.debug('sql id: ' + parent_id);
 
 	    	var parentItem = Zotero.Items.get(parent_id);
-	    	Zot2Bib.saveBibTeX(parentItem);
+
+		// check to make sure parent isn't being deleted too,
+		// which occurs during a normal import
+		if (parentItem.isRegularItem() && 
+		    ((parentItem.numCreators() > 0 ? 1 : 0) 
+		     + (parentItem.getField('title') ? 1 : 0) 
+		     + (parentItem.getField('date') ? 1 : 0) >= 2)) {
+	    	    Zot2Bib.saveBibTeX(parentItem);
+		}
 	    }
 	}
     }
