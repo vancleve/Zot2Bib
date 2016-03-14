@@ -48,6 +48,7 @@ var zoteroCallback = {
 		    if (child.isAttachment()) {
 			// If attachment is a PDF
 			if (child.attachmentMIMEType == 'application/pdf') {
+			    Zotero.debug('(add) pdf child id: ' + childID);
 			    // tell PDF which ID is its parent
 			    // item.setField('extra', item.id)
 			    // item.save();
@@ -71,33 +72,39 @@ var zoteroCallback = {
 		var item = items[i];
 		// var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
 		//     getService(Components.interfaces.nsIPromptService);
-		
-		if (item.isAttachment()) {
-		    var file = item.getFile();
-		    // make sure file exists and is PDF
-		    if (file && item.attachmentMIMEType == 'application/pdf') { //Zotero.File.getExtension(file) == "pdf") {
-			// if attachment is attached to parent references that was imported
-			var dir = Components.classes["@mozilla.org/file/local;1"].
-			    createInstance(Components.interfaces.nsILocalFile);
-			dir.initWithPath(pdfpath);
-			// prompts.alert(null, "Zot2Bib test", "dir path: " + dir.path);
-			file.copyTo(dir, file.leafName);
-						
-			// open PDF
-			if (prefs.getBoolPref('openpdf')) {
-			    var opencmd = Components.classes["@mozilla.org/file/local;1"].
-				createInstance(Components.interfaces.nsILocalFile);
-			    opencmd.initWithPath('/usr/bin/open');
-			    var openprocess = Components.classes["@mozilla.org/process/util;1"].
-				createInstance(Components.interfaces.nsIProcess);
-			    openprocess.init(opencmd);
-			    var args = [dir.path + "/" + file.leafName];
-			    openprocess.runw(true, args, args.length)
-			}
+		Zotero.debug('(modify) item id: ' + item.id);
 
-			// save bibtex item and link PDF
-			var parentItem = Zotero.Items.get(item.getSource());
-			Zot2Bib.saveBibTeX(parentItem, dir.path + "/" + file.leafName)
+		if (!item.isAttachment()) {
+		    var children = item.getAttachments(false);
+		    for each(var childID in children) {
+			var child = Zotero.Items.get(childID);
+			// If attachment is a PDF
+			Zotero.debug('(modify) child id: ' + childID);
+			Zotero.debug('(modify) child attachmentMIMEType: ' + child.attachmentMIMEType);
+			if (child.attachmentMIMEType == 'application/pdf') {
+			    var file = child.getFile();
+			    if (file) {
+				var dir = Components.classes["@mozilla.org/file/local;1"].
+				    createInstance(Components.interfaces.nsILocalFile);
+				dir.initWithPath(pdfpath);
+				file.copyTo(dir, file.leafName);
+				
+				// open PDF
+				if (prefs.getBoolPref('openpdf') && !prefs.getBoolPref('keepinzotero')) {
+				    var opencmd = Components.classes["@mozilla.org/file/local;1"].
+					createInstance(Components.interfaces.nsILocalFile);
+				    opencmd.initWithPath('/usr/bin/open');
+				    var openprocess = Components.classes["@mozilla.org/process/util;1"].
+					createInstance(Components.interfaces.nsIProcess);
+				    openprocess.init(opencmd);
+				    var args = [dir.path + "/" + file.leafName];
+				    openprocess.runw(true, args, args.length)
+				}
+
+				// save bibtex item and link PDF
+				Zot2Bib.saveBibTeX(item, dir.path + "/" + file.leafName)
+			    }
+			}
 		    }
 		}
 	    }
@@ -111,17 +118,20 @@ var zoteroCallback = {
 	    if (item.old.attachment.mimeType == 'application/pdf') {
 		var sql = "SELECT itemID FROM items WHERE key='" + item.old.sourceItemKey +"'";
 		var parent_id = Zotero.DB.valueQuery(sql);
-		Zotero.debug('sql id: ' + parent_id);
+		// if parent already deleted, then normal delete of PDF in progress
+		if (parent_id) {
+		    Zotero.debug('sql id: ' + parent_id);
 
-	    	var parentItem = Zotero.Items.get(parent_id);
+	    	    var parentItem = Zotero.Items.get(parent_id);
 
-		// check to make sure parent isn't being deleted too,
-		// which occurs during a normal import
-		if (parentItem.isRegularItem() && 
-		    ((parentItem.numCreators() > 0 ? 1 : 0) 
-		     + (parentItem.getField('title') ? 1 : 0) 
-		     + (parentItem.getField('date') ? 1 : 0) >= 2)) {
-	    	    Zot2Bib.saveBibTeX(parentItem);
+		    // check to make sure parent isn't being deleted too,
+		    // which occurs during a normal import
+		    if (parentItem.isRegularItem() && 
+			((parentItem.numCreators() > 0 ? 1 : 0) 
+			 + (parentItem.getField('title') ? 1 : 0) 
+			 + (parentItem.getField('date') ? 1 : 0) >= 2)) {
+	    		Zot2Bib.saveBibTeX(parentItem);
+		    }
 		}
 	    }
 	}
