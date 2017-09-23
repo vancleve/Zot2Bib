@@ -13,7 +13,7 @@ var deleteCallback = {
   notify: function(t) {
     if (deleteQueue.length < 1) return;
     var itemId = deleteQueue.shift();
-    if (itemId && Zotero.Items.get(itemId)) Zotero.Items.erase([itemId], true);
+    if (itemId && Zotero.Items.get(itemId)) Zotero.Items.erase([itemId], {deleteItems: true});
   }
 }
 
@@ -140,30 +140,35 @@ var zoteroCallback = {
 
 
 Zot2Bib = {
-    initOnce: function(z) {
-	if (! Zotero) {
-	    Zotero = z;
-	    Zotero.Notifier.registerObserver(zoteroCallback, ['item']);
-	}
-    },
-    about: function(w) {
-	if (! about_window_ref || about_window_ref.closed) about_window_ref = w.open("chrome://zot2bib/content/about.xul", "", "centerscreen,chrome,dialog");
-	else about_window_ref.focus();
-    },
-    preferences: function(w) {
-	if (! prefs_window_ref || prefs_window_ref.closed) prefs_window_ref = w.open("chrome://zot2bib/content/preferences.xul", "", "centerscreen,chrome,dialog,resizable");
-	else prefs_window_ref.focus();
-    },
-    help: function(w) {
-	if (! help_window_ref || help_window_ref.closed) help_window_ref = w.open("chrome://zot2bib/content/help.html");
-	else help_window_ref.focus();
-    },
-    populateMenu: function(menu) {
-	
-	var doc = menu.ownerDocument;
-	var menuitemtype = prefs.getBoolPref('manydests') ? 'checkbox' : 'radio';
-	var destfiles = Zot2Bib.loadList('destfiles');
-	var bibfiles = Zot2Bib.loadList('bibfiles');
+  initOnce: function(z) {
+    if (! Zotero) {
+      Zotero = z;
+      Zotero.Notifier.registerObserver(zoteroCallback, ['item']);
+    }
+  },
+  about: function(w) {
+    if (! about_window_ref || about_window_ref.closed) about_window_ref = w.open("chrome://zot2bib/content/about.xul", "", "centerscreen,chrome,dialog");
+    else about_window_ref.focus();
+  },
+  preferences: function(w) {
+    if (! prefs_window_ref || prefs_window_ref.closed) prefs_window_ref = w.open("chrome://zot2bib/content/preferences.xul", "", "centerscreen,chrome,dialog,resizable");
+    else prefs_window_ref.focus();
+  },
+  help: function(w) {
+    var script_path = own_path.path + '/chrome/content/zot2bib/help.html';
+    var osascript = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+    osascript.initWithPath('/usr/bin/open');
+    var process = Components.classes["@mozilla.org/process/util;1"].createInstance(Components.interfaces.nsIProcess);
+    process.init(osascript);
+    var args = [script_path];
+    process.run(false, args, args.length);
+  },
+  populateMenu: function(menu) {
+    
+    var doc = menu.ownerDocument;
+    var menuitemtype = prefs.getBoolPref('manydests') ? 'checkbox' : 'radio';
+    var destfiles = Zot2Bib.loadList('destfiles');
+    var bibfiles = Zot2Bib.loadList('bibfiles');
 
 	var addMenuItem = function(props, attrs) {
 	    var item = doc.createElement('menuitem');
